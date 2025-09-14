@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  reel-bot:
+    build: .
+    container_name: reel-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+      # COOKIEFILE: "/app/cookies.txt"   # путь внутри контейнера
+#    volumes:
+#      - ./cookies.txt:/app/cookies.txt:ro   # только для чтения
