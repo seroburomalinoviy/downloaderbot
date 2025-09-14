@@ -1,15 +1,10 @@
 # Используем официальный Python 3.12 slim
 FROM python:3.12-slim
 
-# --- Установка системных зависимостей ---
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl git && \
-    rm -rf /var/lib/apt/lists/*
-
 # --- Создание рабочей директории ---
 WORKDIR /app
 
-# --- Копирование скрипта бота ---
+# --- Копирование скрипта бота и зависимостей ---
 COPY bot_polling.py /app/
 COPY requests.txt /app/
 
