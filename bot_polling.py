@@ -3,7 +3,7 @@ import os
 import tempfile
 import shutil
 import logging
-import requests
+import asyncio
 from yt_dlp import YoutubeDL
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
@@ -35,14 +35,14 @@ def download_reel(url: str, dest_dir: str) -> str:
         return ydl.prepare_filename(info)
 
 # --- Telegram отправка ---
-def send_file(update, context, filepath: str, caption: str = ""):
+async def send_file(update: Update, filepath: str, caption: str = ""):
     filesize = os.path.getsize(filepath)
     field_name = "video" if filesize <= MAX_VIDEO_SIZE else "document"
     with open(filepath, "rb") as f:
         if field_name == "video":
-            update.message.reply_video(video=f, caption=caption)
+            await update.message.reply_video(video=f, caption=caption)
         else:
-            update.message.reply_document(document=f, caption=caption)
+            await update.message.reply_document(document=f, caption=caption)
 
 # --- Обработка URL ---
 async def handle_reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -50,8 +50,9 @@ async def handle_reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Скачиваю Reel, подождите...")
     tmpdir = tempfile.mkdtemp(prefix="reel_")
     try:
-        filepath = download_reel(url, tmpdir)
-        send_file(update, context, filepath)
+        # Чтобы не блокировать event loop, скачиваем в отдельном потоке
+        filepath = await asyncio.to_thread(download_reel, url, tmpdir)
+        await send_file(update, filepath)
     except Exception as e:
         logger.exception("Ошибка при скачивании")
         await update.message.reply_text(f"Ошибка: {e}")
@@ -60,7 +61,9 @@ async def handle_reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # --- Команда /start ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Привет! Пришли ссылку на Instagram Reel, я скачаю и пришлю тебе видео.")
+    await update.message.reply_text(
+        "Привет! Пришли ссылку на Instagram Reel, я скачаю и пришлю тебе видео."
+    )
 
 # --- Основной запуск ---
 def main():
