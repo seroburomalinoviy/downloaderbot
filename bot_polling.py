@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 YTDL_OPTS = {
-    "format": "bv*+ba/b",
+    "format": "bestvideo*+bestaudio/best",
     "merge_output_format": "mp4",
     "outtmpl": "%(id)s.%(ext)s",
     "quiet": True,
